@@ -1,5 +1,5 @@
 ---
-# CSMA_CD
+# Simple_CSMA_CD
 
 A Python-based simulation of the p-persistent CSMA/CD (Carrier Sense Multiple Access with Collision Detection) protocol, demonstrating the behavior of stations sharing a communication channel. The simulation showcases how collisions are detected, exponential backoff is applied, and data frames are transmitted.
 
