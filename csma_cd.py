@@ -1,4 +1,6 @@
+import matplotlib.pyplot as plt
 import random
+
 
 class Channel:
     def __init__(self, bandwidth, Tp):
@@ -8,6 +10,7 @@ class Channel:
         self.current_station = None
         self.busy_delay = 0
         self.finish_delay = 0
+
 
 class Station:
     def __init__(self, ID, frame_size, channel, p):
@@ -21,6 +24,8 @@ class Station:
         self.k = 0
         self.jamming = False
         self.count = 0
+        self.interrupted = 0
+        self.dropped = 0
         self.sending = False
 
     def exponential_backoff(self):
@@ -30,6 +35,7 @@ class Station:
         else:
             self.k = 0
             self.drop_period = 5
+            self.dropped += 1
 
     def p_persistence(self):
         if self.sending:
@@ -54,6 +60,8 @@ class Station:
         self.jamming = True
         self.sending = False
         self.exponential_backoff()
+        self.interrupted += 1
+
 
 def simulate(stations, channel, time):
     time_slots = time * 1000
@@ -69,7 +77,7 @@ def simulate(stations, channel, time):
                     break
 
             if jamming:
-                time_slots-=1
+                time_slots -= 1
                 continue
 
             if not channel.busy:
@@ -94,7 +102,7 @@ def simulate(stations, channel, time):
                     ready[0].sending = True
                     log.write(f"{ready[0].ID} started sending\n")
 
-                elif channel.current_station is not None and ready:
+                elif ready:
                     if channel.current_station:
                         log.write(f"{channel.current_station} interrupted. ")
                         stations[channel.current_station].interrupt()
@@ -121,14 +129,25 @@ def simulate(stations, channel, time):
 
             time_slots -= 1
 
+
 channel = Channel(bandwidth=1000, Tp=5)
+P = 0.33
 stations = {
-    "A": Station(ID="A", frame_size=12000, channel=channel, p=0.5),
-    "B": Station(ID="B", frame_size=16000, channel=channel, p=0.7),
-    "C": Station(ID="C", frame_size=11000, channel=channel, p=0.3)
+    "A": Station(ID="A", frame_size=12000, channel=channel, p=P),
+    "B": Station(ID="B", frame_size=12000, channel=channel, p=P),
+    "C": Station(ID="C", frame_size=12000, channel=channel, p=P)
 }
 
-simulate(stations, channel, time=5)
 
-for id, station in stations.items():
-    print(f'{id} {station.count}')
+# Your data collection logic
+times = []
+avgs = []
+
+for i in range(1, 150, 1):
+    time = i / 10
+    simulate(stations, channel, time=time)
+    avg = 0
+    for id, station in stations.items():
+        avg += station.count
+    times.append(time)
+    avgs.append(avg / (time * 3))
